@@ -1,5 +1,4 @@
 import cv2
-import time
 import math as m
 import mediapipe as mp
 
@@ -14,13 +13,6 @@ def findAngle(x1,y1,x2,y2):
     degree = int(180/m.pi)*theta
     return degree
 
-def sendWarning(x):
-    pass
-
-#initialize frame counters
-
-good_frames = 0
-bad_frames = 0
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -51,6 +43,11 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 #Video Writer
 
 video_output = cv2.VideoWriter('output.mp4',fourcc, fps, frame_size)
+
+if not cap.isOpened():
+    print("Error : Could not open the camera")
+    exit()
+
 
 #body posture detection main loop
 
@@ -140,9 +137,7 @@ while(cap.isOpened()):
     # The threshold angles have been set based on intuition
 
     if neck_inclination < 40 and torso_inclination < 10:
-        bad_frames = 0
-        good_frames += 1
-
+        
         cv2.putText(image, angle_text_string, (10,30),font, 0.9,light_green, 2)
         cv2.putText(image, str(int(neck_inclination)),(l_shldr_x+10,l_shldr_y), font, 0.9, light_green, 2)
         cv2.putText(image, str(int(torso_inclination)),(l_hip_x+10,l_hip_y), font, 0.9, light_green, 2)
@@ -155,9 +150,7 @@ while(cap.isOpened()):
         cv2.line(image, (l_hip_x,l_hip_y),(l_hip_x,l_hip_y-100),green,4)
 
     else:
-        good_grames = 0
-        bad_frames += 1
-
+        
         cv2.putText(image, angle_text_string, (10,30), font, 0.9, red, 2)
         cv2.putText(image,str(int(neck_inclination)),(l_shldr_x+10,l_shldr_y),font,0.9,red,2)
         cv2.putText(image, str(int(torso_inclination)), (l_hip_x + 10, l_hip_y), font, 0.9, red, 2)
@@ -169,22 +162,7 @@ while(cap.isOpened()):
         cv2.line(image,(l_hip_x,l_hip_y),(l_shldr_x,l_shldr_y),red,4)
         cv2.line(image,(l_hip_x,l_hip_y),(l_shldr_x,l_shldr_y-100),red,4)
 
-    #calculate the time of remaining in a particular posture
 
-    good_time = (1/fps) * good_frames
-    bad_time = (1/fps) * bad_frames
-
-    #Pose Time
-
-    if(good_time>0):
-        time_string_good = "Good Posture time : " + str(round(good_time,1)) + 's'
-        cv2.putText(image,time_string_good,(10, h-20), font,0.9,green,2)
-    else:
-        time_string_bad = "Bad Posture time : " + str(round(bad_time,1)) + 's'
-        cv2.putText(image,time_string_bad,(10, h-20), font,0.9,red,2)
-
-    if bad_time > 180:
-        sendWarning()
     #Write Frames
     cv2.imshow("image",image)
     if cv2.waitKey(10) == 13:
